@@ -1,0 +1,1 @@
+javascript:void((function(){if(document.getElementById('wsf-panel')){document.getElementById('wsf-toggle-btn').click();return;}var s=document.createElement('script');s.src='http://localhost:8000/content.js';document.head.appendChild(s);var c=document.createElement('link');c.rel='stylesheet';c.href='http://localhost:8000/panel.css';document.head.appendChild(c);})())

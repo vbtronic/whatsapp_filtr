@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Spam Filtr</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --card: #1f2937;
+      --green: #25d366;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    section {
+      padding: 80px 20px;
+    }
+
+    /* Fade-in animation */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 20px 80px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--green), #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .hero .subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .badges {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+
+    .badge {
+      background: rgba(37, 211, 102, 0.1);
+      border: 1px solid rgba(37, 211, 102, 0.25);
+      color: var(--green);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--green), #1da851);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* Section titles */
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    /* Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(37, 211, 102, 0.3);
+    }
+
+    .feature-card .icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* How it works */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .step {
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), #3b82f6);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.2rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* Warning */
+    .warning {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 16px;
+      padding: 24px 32px;
+      text-align: center;
+      color: #fbbf24;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .warning strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    /* Download */
+    .download-section {
+      text-align: center;
+    }
+
+    .code-block {
+      background: #111118;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 28px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.95rem;
+      color: var(--green);
+      max-width: 600px;
+      margin: 0 auto 32px;
+      overflow-x: auto;
+      user-select: all;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    footer p {
+      margin-bottom: 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      section {
+        padding: 60px 20px;
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 80px 20px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container fade-in">
+      <h1>🛡️ WhatsApp Spam Filtr</h1>
+      <p class="subtitle">Moderuj WhatsApp skupiny přímo z prohlížeče</p>
+      <div class="badges">
+        <span class="badge">Zdarma</span>
+        <span class="badge">Open Source</span>
+        <span class="badge">Bez API</span>
+      </div>
+      <div class="cta-group">
+        <a href="https://github.com/vbtronic/whatsapp_filtr" class="btn btn-primary">📥 Stáhnout</a>
+        <a href="#features" class="btn btn-secondary">📖 Dokumentace</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="container">
+      <h2 class="section-title fade-in">Co umí?</h2>
+      <div class="features-grid">
+        <div class="feature-card fade-in">
+          <div class="icon">🚫</div>
+          <h3>Spam filtr</h3>
+          <p>Automatická detekce a mazání spamových zpráv podle klíčových slov a vzorců.</p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">🤬</div>
+          <h3>Filtr vulgarismů</h3>
+          <p>Blokování nevhodných výrazů s předdefinovaným i vlastním seznamem slov.</p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">⏰</div>
+          <h3>Časované mazání</h3>
+          <p>Nastavení automatického mazání zpráv po uplynutí zadané doby.</p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">🤖</div>
+          <h3>AI asistent</h3>
+          <p>Inteligentní analýza zpráv s podporou rozpoznávání kontextu.</p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">🎛️</div>
+          <h3>Dashboard</h3>
+          <p>Přehledný ovládací panel pro správu filtrů a statistik přímo v prohlížeči.</p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="icon">🔒</div>
+          <h3>Soukromí</h3>
+          <p>Vše běží lokálně na tvém počítači. Žádná data neopouštějí tvůj prohlížeč.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section>
+    <div class="container">
+      <h2 class="section-title fade-in">Jak to funguje?</h2>
+      <div class="steps">
+        <div class="step fade-in">
+          <div class="step-number">1</div>
+          <h3>Stáhni a spusť server</h3>
+          <p>Naklonuj repozitář a spusť lokální server jedním příkazem.</p>
+        </div>
+        <div class="step fade-in">
+          <div class="step-number">2</div>
+          <h3>Přidej bookmarklet</h3>
+          <p>Přetáhni bookmarklet do lišty záložek v prohlížeči.</p>
+        </div>
+        <div class="step fade-in">
+          <div class="step-number">3</div>
+          <h3>Otevři WhatsApp Web</h3>
+          <p>Přihlás se na web.whatsapp.com jako obvykle.</p>
+        </div>
+        <div class="step fade-in">
+          <div class="step-number">4</div>
+          <h3>Nastav a moderuj</h3>
+          <p>Klikni na bookmarklet, nastav filtry a nech nástroj pracovat.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Warning -->
+  <section>
+    <div class="container">
+      <div class="warning fade-in">
+        <strong>⚠️ Šedá zóna WhatsApp ToS</strong>
+        Každé mazání vyžaduje potvrzení uživatelem. Používání na vlastní riziko.
+      </div>
+    </div>
+  </section>
+
+  <!-- Download -->
+  <section class="download-section">
+    <div class="container">
+      <h2 class="section-title fade-in">Stáhnout</h2>
+      <div class="code-block fade-in">git clone https://github.com/vbtronic/whatsapp_filtr.git</div>
+      <a href="https://github.com/vbtronic/whatsapp_filtr" class="btn btn-primary fade-in">Otevřít na GitHubu</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p><strong>Viktor Brunclík</strong> (<a href="https://github.com/vbtronic">vbtronic</a>)</p>
+      <p>Licence MIT · <a href="https://github.com/vbtronic/whatsapp_filtr">GitHub</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
