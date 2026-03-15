@@ -536,6 +536,10 @@ select.wsf-input {
     return s ? s.innerText : '';
   }
 
+  function getMessageId(el) {
+    return el ? (el.getAttribute('data-id') || el.id || null) : null;
+  }
+
   function isOutgoing(el) {
     return !!(el.closest('.message-out') || el.classList.contains('message-out'));
   }
@@ -745,8 +749,15 @@ select.wsf-input {
     var deleted = 0;
 
     for (var i = 0; i < items.length; i++) {
-      if (!document.contains(items[i].el)) continue;
-      var ok = await deleteOneMessage(items[i].el);
+      var el = items[i].el;
+      if (!document.contains(el)) continue;
+
+      var ok = false;
+      for (var attempt = 0; attempt < 2 && !ok; attempt++) {
+        ok = await deleteOneMessage(el);
+        if (!ok) await sleep(800);
+      }
+
       if (ok) {
         deleted++;
         stats.deleted++;
@@ -769,7 +780,6 @@ select.wsf-input {
 
     var current = getCurrentGroupName();
     if (config.global.selectedGroup && config.global.selectedGroup !== current) {
-      clearFlags();
       if (showNotificationUI) {
         updateNotification();
         log('⏸️ Sken přeskočen pro "' + current + '" (vybrána "' + config.global.selectedGroup + '")', 'info');
@@ -777,29 +787,54 @@ select.wsf-input {
       return;
     }
 
-    clearFlags();
     repeatMap = {};
+
+    // Odstranit flagy zpráv, které již nejsou v DOM
+    flaggedMessages = flaggedMessages.filter(function (f) {
+      return f.el && document.contains(f.el);
+    });
+
     var msgs = getMessages();
-    var count = 0;
+    var found = 0;
+    var flaggedIds = {};
+    flaggedMessages.forEach(function (item) {
+      var id = getMessageId(item.el);
+      if (id) flaggedIds[id] = true;
+    });
 
     for (var i = 0; i < msgs.length; i++) {
       var el = msgs[i];
       if (isOutgoing(el)) continue;
-
       var text = getMessageText(el);
+      var id = getMessageId(el);
+      if (!id) continue;
 
       var spamReason = checkSpam(text, el);
-      if (spamReason) { flagMessage(el, spamReason, 'spam'); count++; continue; }
+      if (spamReason && !flaggedIds[id]) {
+        flagMessage(el, spamReason, 'spam');
+        flaggedIds[id] = true;
+        found++;
+        continue;
+      }
 
       var profWord = checkProfanity(text);
-      if (profWord) { flagMessage(el, 'sprosté slovo: ' + profWord, 'profanity'); count++; continue; }
+      if (profWord && !flaggedIds[id]) {
+        flagMessage(el, 'sprosté slovo: ' + profWord, 'profanity');
+        flaggedIds[id] = true;
+        found++;
+        continue;
+      }
 
-      if (checkTimed(el)) { flagMessage(el, 'starší než ' + config.global.timedDeleteMinutes + ' min', 'timed'); count++; }
+      if (checkTimed(el) && !flaggedIds[id]) {
+        flagMessage(el, 'starší než ' + config.global.timedDeleteMinutes + ' min', 'timed');
+        flaggedIds[id] = true;
+        found++;
+      }
     }
 
     if (showNotificationUI) {
       updateNotification();
-      log('🔍 Sken: ' + count + ' nalezeno z ' + msgs.length + ' zpráv', count > 0 ? 'warn' : 'info');
+      log('🔍 Sken: ' + found + ' přidaných flagů z ' + msgs.length + ' zpráv', found > 0 ? 'warn' : 'info');
     } else {
       if (flaggedMessages.length > 0) {
         var btn = document.getElementById('wsf-toggle-btn');
@@ -854,16 +889,22 @@ select.wsf-input {
     if (autoScanInterval) clearInterval(autoScanInterval);
     if (notificationInterval) clearInterval(notificationInterval);
 
+    if (!config.global.enabled) return;
+
     autoScanInterval = setInterval(function () {
       if (config.global.enabled) scanChat(false);
     }, 5000);
 
-    var mins = config.global.scanIntervalMinutes || 60;
+    var mins = Math.max(1, config.global.scanIntervalMinutes || 60);
     notificationInterval = setInterval(function () {
       if (config.global.enabled) scanChat(true);
     }, mins * 60 * 1000);
 
     scanInterval = autoScanInterval;
+
+    // První okamžitá kontrola
+    scanChat(true);
+
     log('⏱️ Skenování každých 5 s, upozornění každých ' + mins + ' min', 'info');
   }
 

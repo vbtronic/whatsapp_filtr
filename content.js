@@ -111,6 +111,10 @@
     return s ? s.innerText : '';
   }
 
+  function getMessageId(el) {
+    return el ? (el.getAttribute('data-id') || el.id || null) : null;
+  }
+
   function isOutgoing(el) {
     return !!(el.closest('.message-out') || el.classList.contains('message-out'));
   }
@@ -433,16 +437,22 @@
     if (autoScanInterval) clearInterval(autoScanInterval);
     if (notificationInterval) clearInterval(notificationInterval);
 
+    if (!config.global.enabled) return;
+
     autoScanInterval = setInterval(function () {
       if (config.global.enabled) scanChat(false);
     }, 5000);
 
-    var mins = config.global.scanIntervalMinutes || 60;
+    var mins = Math.max(1, config.global.scanIntervalMinutes || 60);
     notificationInterval = setInterval(function () {
       if (config.global.enabled) scanChat(true);
     }, mins * 60 * 1000);
 
     scanInterval = autoScanInterval;
+
+    // První okamžitá kontrola s upozorněním
+    scanChat(true);
+
     log('⏱️ Skenování každých 5 s, upozornění každých ' + mins + ' min', 'info');
   }
 
