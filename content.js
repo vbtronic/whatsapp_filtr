@@ -595,6 +595,34 @@
     if (label) {
       label.textContent = 'Aktuální chat: ' + current + ' | Aktivní skupina: ' + (config.global.selectedGroup || 'všechny');
     }
+    renderGroupList();
+  }
+
+  function renderGroupList() {
+    var container = document.getElementById('wsf-group-list');
+    if (!container) return;
+
+    var keys = Object.keys(config.groups || {}).sort();
+    if (keys.length === 0) {
+      container.innerHTML = '<small style="color:#9ca3af">Žádné skupiny v seznamu. Přidej aktuální skupinu.</small>';
+      return;
+    }
+
+    container.innerHTML = keys.map(function (key) {
+      var activeClass = (config.global.selectedGroup === key) ? 'wsf-tag-active' : '';
+      return '<span class="wsf-tag ' + activeClass + '" data-group="' + escapeHtml(key) + '">' + escapeHtml(key) + '</span>';
+    }).join('');
+
+    container.querySelectorAll('.wsf-tag').forEach(function (item) {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', function () {
+        var group = item.dataset.group;
+        config.global.selectedGroup = group;
+        saveConfig();
+        updateGroupNameUI();
+        log('✅ Skupina aktivní k moderaci: ' + group, 'info');
+      });
+    });
   }
 
   function updateStatsUI() {
@@ -718,6 +746,12 @@
             '<span id="wsf-group-filter-label" style="font-size:12px; color:#aaa; width:100%">Aktivní skupina: všechny</span>' +
             '<select id="wsf-group-select" class="wsf-input" style="width:100%;"></select>' +
             '<button class="wsf-btn wsf-btn-green" id="wsf-group-add-current" style="width:100%">+ Přidat aktuální skupinu</button>' +
+<<<<<<< HEAD
+||||||| parent of 75ce4eb (feat: group selection toggle in UI; active group filter behavior)
+          '<div class="wsf-section-title">Změnit název</div>' +
+=======
+            '<div id="wsf-group-list" class="wsf-tags" style="margin-top:8px; max-height:120px; overflow-y:auto; width:100%"></div>' +
+>>>>>>> 75ce4eb (feat: group selection toggle in UI; active group filter behavior)
           '</div>' +
           '<div class="wsf-section-title" style="margin-top:10px">Změnit název</div>' +
           '<div class="wsf-input-row"><input type="text" class="wsf-input" id="wsf-grp-name" placeholder="Nový název…"><button class="wsf-btn wsf-btn-green" id="wsf-grp-name-btn">📋 Kopírovat</button></div>' +

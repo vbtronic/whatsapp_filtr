@@ -258,6 +258,11 @@ textarea.wsf-input {
   border-radius: 4px;
   font-size: 12px;
 }
+.wsf-tag-active {
+  border: 1px solid #25d366;
+  background: #25d366;
+  color: #111827;
+}
 .wsf-tag-remove {
   cursor: pointer;
   color: #ef4444;
