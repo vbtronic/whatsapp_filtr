@@ -423,29 +423,26 @@
     }
   }
 
-  // ── Odesílání zpráv (po potvrzení) ─────────────────────────
-  async function sendMessageToChat(text) {
+  // ── Příprava textu do schránky (žádné auto-odesílání) ────────
+  // WhatsApp ToS zakazuje auto-messaging. Proto text pouze zkopírujeme
+  // do schránky a uživatel ho vloží a odešle sám.
+  async function copyToClipboard(text) {
     try {
-      var input = document.querySelector('#main footer [contenteditable="true"]') ||
-        document.querySelector('[data-tab="10"]');
-      if (!input) { log('❌ Chat input nenalezen', 'warn'); return false; }
-      input.focus();
-      await sleep(200);
-      document.execCommand('insertText', false, text);
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      await sleep(300);
-      var sendBtn = document.querySelector('[data-icon="send"]') ||
-        document.querySelector('[data-testid="send"]');
-      if (sendBtn) {
-        sendBtn.click();
-        log('📤 Zpráva odeslána', 'ok');
-        return true;
-      }
-      log('⚠️ Tlačítko odeslat nenalezeno', 'warn');
-      return false;
+      await navigator.clipboard.writeText(text);
+      log('📋 Text zkopírován do schránky — vlož ho do chatu ručně (Ctrl+V)', 'ok');
+      return true;
     } catch (e) {
-      log('❌ Chyba odesílání: ' + e.message, 'warn');
-      return false;
+      // Fallback
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      log('📋 Text zkopírován — vlož ho do chatu ručně (⌘V)', 'ok');
+      return true;
     }
   }
 
@@ -489,52 +486,19 @@
     log('📧 E-mail notifikace připravena', 'info');
   }
 
-  // ── Nastavení skupiny (po potvrzení) ───────────────────────
+  // ── Nastavení skupiny (pouze kopírování do schránky) ─────────
+  // WhatsApp ToS zakazuje automatickou modifikaci služby.
+  // Název/popis zkopírujeme do schránky — uživatel změní ručně.
   async function changeGroupName(newName) {
-    try {
-      var header = document.querySelector('#main header');
-      if (header) header.click();
-      await sleep(800);
-      var nameEl = document.querySelector('[contenteditable="true"]');
-      if (nameEl) {
-        nameEl.click();
-        await sleep(300);
-        nameEl.textContent = newName;
-        nameEl.dispatchEvent(new Event('input', { bubbles: true }));
-        var save = document.querySelector('[data-icon="checkmark"]') ||
-          document.querySelector('[data-testid="btn-ok"]');
-        if (save) save.click();
-        log('✅ Název skupiny změněn', 'ok');
-      } else {
-        log('⚠️ Pole pro název nenalezeno', 'warn');
-      }
-    } catch (e) {
-      log('❌ Chyba: ' + e.message, 'warn');
-    }
+    await copyToClipboard(newName);
+    showNotification('📋 Název "' + newName + '" zkopírován — klikni na hlavičku skupiny a vlož ručně', null, null);
+    setTimeout(hideNotification, 5000);
   }
 
   async function changeGroupDescription(desc) {
-    try {
-      var header = document.querySelector('#main header');
-      if (header) header.click();
-      await sleep(800);
-      var descEls = document.querySelectorAll('[contenteditable="true"]');
-      var descEl = descEls.length > 1 ? descEls[1] : null;
-      if (descEl) {
-        descEl.click();
-        await sleep(300);
-        descEl.textContent = desc;
-        descEl.dispatchEvent(new Event('input', { bubbles: true }));
-        var save = document.querySelector('[data-icon="checkmark"]') ||
-          document.querySelector('[data-testid="btn-ok"]');
-        if (save) save.click();
-        log('✅ Popis skupiny změněn', 'ok');
-      } else {
-        log('⚠️ Pole pro popis nenalezeno', 'warn');
-      }
-    } catch (e) {
-      log('❌ Chyba: ' + e.message, 'warn');
-    }
+    await copyToClipboard(desc);
+    showNotification('📋 Popis zkopírován — otevři info skupiny a vlož ručně', null, null);
+    setTimeout(hideNotification, 5000);
   }
 
   // ── Notifikace v panelu ────────────────────────────────────
@@ -702,10 +666,10 @@
           '<div class="wsf-section-title">Aktuální skupina</div>' +
           '<p style="margin:0 0 12px">Skupina: <strong id="wsf-current-group">–</strong></p>' +
           '<div class="wsf-section-title">Změnit název</div>' +
-          '<div class="wsf-input-row"><input type="text" class="wsf-input" id="wsf-grp-name" placeholder="Nový název…"><button class="wsf-btn wsf-btn-green" id="wsf-grp-name-btn">Změnit</button></div>' +
-          '<div class="wsf-section-title" style="margin-top:12px">Změnit popis</div>' +
+          '<div class="wsf-input-row"><input type="text" class="wsf-input" id="wsf-grp-name" placeholder="Nový název…"><button class="wsf-btn wsf-btn-green" id="wsf-grp-name-btn">📋 Kopírovat</button></div>' +
+          '<div class="wsf-section-title" style="margin-top:12px">Popis skupiny</div>' +
           '<textarea class="wsf-input" id="wsf-grp-desc" rows="3" placeholder="Nový popis…"></textarea>' +
-          '<button class="wsf-btn wsf-btn-green wsf-full-width" id="wsf-grp-desc-btn" style="margin-top:6px">Změnit popis</button>' +
+          '<button class="wsf-btn wsf-btn-green wsf-full-width" id="wsf-grp-desc-btn" style="margin-top:6px">📋 Kopírovat popis</button>' +
           '<div class="wsf-section-title" style="margin-top:16px">Nebezpečná zóna</div>' +
           '<button class="wsf-btn wsf-btn-red wsf-full-width" id="wsf-clear-chat">🧹 Smazat celý obsah chatu</button>' +
         '</div>' +
@@ -722,7 +686,7 @@
           '<textarea class="wsf-input" id="wsf-ai-question" rows="3" placeholder="Na co se chceš zeptat?"></textarea>' +
           '<button class="wsf-btn wsf-btn-green wsf-full-width" id="wsf-ai-ask" style="margin-top:6px">🤖 Zeptat se</button>' +
           '<div id="wsf-ai-response"></div>' +
-          '<button class="wsf-btn wsf-btn-green wsf-full-width" id="wsf-ai-send" style="margin-top:6px;display:none">📤 Odeslat do chatu</button>' +
+          '<button class="wsf-btn wsf-btn-green wsf-full-width" id="wsf-ai-send" style="margin-top:6px;display:none">📋 Kopírovat do schránky</button>' +
         '</div>' +
       '</div>' +
 
@@ -791,8 +755,8 @@
         startPeriodicScan();
         log('✅ Filtr zapnut', 'ok');
         if (config.global.notifyOnActivation) {
-          showNotification('Odeslat oznámení do skupiny?', 'Odeslat', function () {
-            sendMessageToChat('🛡️ V této skupině je aktivní Spam Filtr pro moderaci obsahu.');
+          showNotification('Zkopírovat oznámení do schránky?', '📋 Kopírovat', function () {
+            copyToClipboard('🛡️ V této skupině je aktivní Spam Filtr pro moderaci obsahu.');
             hideNotification();
           });
         }
@@ -895,22 +859,16 @@
       });
     });
 
-    // Nastavení skupiny
+    // Nastavení skupiny — kopírování do schránky
     document.getElementById('wsf-grp-name-btn').addEventListener('click', function () {
       var name = document.getElementById('wsf-grp-name').value.trim();
       if (!name) return;
-      showNotification('Změnit název na "' + name + '"?', 'Potvrdit', function () {
-        changeGroupName(name);
-        hideNotification();
-      });
+      changeGroupName(name);
     });
     document.getElementById('wsf-grp-desc-btn').addEventListener('click', function () {
       var desc = document.getElementById('wsf-grp-desc').value.trim();
       if (!desc) return;
-      showNotification('Změnit popis skupiny?', 'Potvrdit', function () {
-        changeGroupDescription(desc);
-        hideNotification();
-      });
+      changeGroupDescription(desc);
     });
 
     // AI
@@ -930,8 +888,8 @@
     document.getElementById('wsf-ai-send').addEventListener('click', function () {
       var answer = document.getElementById('wsf-ai-response').textContent;
       if (!answer) return;
-      showNotification('Odeslat AI odpověď do chatu?', 'Odeslat', function () {
-        sendMessageToChat(answer);
+      showNotification('Zkopírovat AI odpověď do schránky?', '📋 Kopírovat', function () {
+        copyToClipboard(answer);
         document.getElementById('wsf-ai-send').style.display = 'none';
         hideNotification();
       });
