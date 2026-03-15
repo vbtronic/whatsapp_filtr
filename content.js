@@ -218,7 +218,11 @@
         showNotification(
           '🛡️ Nalezeno ' + n + ' zpráv ke smazání',
           'Smazat (' + n + ')',
-          function () { deleteBatch(); }
+          function () {
+            if (confirm('Opravdu smazat ' + n + ' zpráv?')) {
+              deleteBatch();
+            }
+          }
         );
       }
       // E-mail notifikace
@@ -801,9 +805,8 @@
       config.global.enabled = enabledEl.checked;
       saveConfig();
       if (config.global.enabled) {
-        startObserver();
         startPeriodicScan();
-        log('✅ Filtr zapnut', 'ok');
+        log('✅ Filtr zapnut (pouze interval)', 'ok');
         if (config.global.notifyOnActivation) {
           showNotification('Zkopírovat oznámení do schránky?', '📋 Kopírovat', function () {
             copyToClipboard('🛡️ V této skupině je aktivní Spam Filtr pro moderaci obsahu.');
@@ -811,7 +814,6 @@
           });
         }
       } else {
-        if (observer) observer.disconnect();
         if (scanInterval) clearInterval(scanInterval);
         log('⏸️ Filtr vypnut', 'warn');
       }
@@ -981,10 +983,9 @@
     setupListeners();
     watchChatSwitch();
     if (config.global.enabled) {
-      startObserver();
       startPeriodicScan();
     }
-    log('🚀 WhatsApp Spam Filtr v1.0 načten', 'info');
+    log('🚀 WhatsApp Spam Filtr v1.0 načten (interval mode)', 'info');
   }
 
   function waitForApp() {
