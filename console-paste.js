@@ -81,11 +81,18 @@
 
 /* ===== Notification ===== */
 .wsf-notification {
-  padding: 10px 14px;
-  background: rgba(37, 211, 102, 0.08);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 110000;
+  padding: 12px 16px;
+  background: rgba(17, 24, 39, 0.95);
   border-bottom: 1px solid #374151;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 .wsf-notification.wsf-hidden {
@@ -460,6 +467,8 @@ select.wsf-input {
   var repeatMap = {};
   var observer = null;
   var scanInterval = null;
+  var notificationInterval = null;
+  var autoScanInterval = null;
   var notifCallback = null;
 
   // ── LocalStorage ───────────────────────────────────────────
@@ -681,6 +690,14 @@ select.wsf-input {
             }
           }
           if (!deleteOpt) {
+            // Fallback: zkus tlačítka s testid/data-icon
+            var fallback = document.querySelector('[data-testid*="delete"], [data-icon="trash"], [aria-label*="smazat"], [aria-label*="delete"]');
+            if (fallback) {
+              deleteOpt = fallback;
+            }
+          }
+
+          if (!deleteOpt) {
             document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
             log('⚠️ Volba "Smazat" nenalezena', 'warn');
             resolve(false);
@@ -706,6 +723,13 @@ select.wsf-input {
           }
           confirmBtn.click();
           await sleep(300);
+
+          if (document.contains(el)) {
+            log('⚠️ Zpráva možná nebyla smazána, zkouším znovu', 'warn');
+            resolve(false);
+            return;
+          }
+
           resolve(true);
         } catch (e) {
           log('❌ Chyba mazání: ' + e.message, 'warn');
@@ -740,12 +764,16 @@ select.wsf-input {
   }
 
   // ── Skenování ──────────────────────────────────────────────
-  function scanChat() {
+  function scanChat(showNotificationUI) {
+    if (typeof showNotificationUI === 'undefined') showNotificationUI = true;
+
     var current = getCurrentGroupName();
     if (config.global.selectedGroup && config.global.selectedGroup !== current) {
       clearFlags();
-      updateNotification();
-      log('⏸️ Sken přeskočen pro "' + current + '" (vybrána "' + config.global.selectedGroup + '")', 'info');
+      if (showNotificationUI) {
+        updateNotification();
+        log('⏸️ Sken přeskočen pro "' + current + '" (vybrána "' + config.global.selectedGroup + '")', 'info');
+      }
       return;
     }
 
@@ -769,8 +797,15 @@ select.wsf-input {
       if (checkTimed(el)) { flagMessage(el, 'starší než ' + config.global.timedDeleteMinutes + ' min', 'timed'); count++; }
     }
 
-    updateNotification();
-    log('🔍 Sken: ' + count + ' nalezeno z ' + msgs.length + ' zpráv', count > 0 ? 'warn' : 'info');
+    if (showNotificationUI) {
+      updateNotification();
+      log('🔍 Sken: ' + count + ' nalezeno z ' + msgs.length + ' zpráv', count > 0 ? 'warn' : 'info');
+    } else {
+      if (flaggedMessages.length > 0) {
+        var btn = document.getElementById('wsf-toggle-btn');
+        if (btn) btn.classList.add('wsf-pulse');
+      }
+    }
   }
 
   function startObserver() {
@@ -816,11 +851,20 @@ select.wsf-input {
 
   function startPeriodicScan() {
     if (scanInterval) clearInterval(scanInterval);
+    if (autoScanInterval) clearInterval(autoScanInterval);
+    if (notificationInterval) clearInterval(notificationInterval);
+
+    autoScanInterval = setInterval(function () {
+      if (config.global.enabled) scanChat(false);
+    }, 5000);
+
     var mins = config.global.scanIntervalMinutes || 60;
-    scanInterval = setInterval(function () {
-      if (config.global.enabled) scanChat();
+    notificationInterval = setInterval(function () {
+      if (config.global.enabled) scanChat(true);
     }, mins * 60 * 1000);
-    log('⏱️ Periodický sken: každých ' + mins + ' min', 'info');
+
+    scanInterval = autoScanInterval;
+    log('⏱️ Skenování každých 5 s, upozornění každých ' + mins + ' min', 'info');
   }
 
   function watchChatSwitch() {
@@ -1268,6 +1312,9 @@ select.wsf-input {
       el.addEventListener('change', function () {
         config.global[key] = parseInt(el.value, 10) || 0;
         saveConfig();
+        if (id === 'wsf-scan-interval' && config.global.enabled) {
+          startPeriodicScan();
+        }
       });
     }
     bindNumber('wsf-max-repeat', 'maxRepeat');

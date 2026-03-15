@@ -42,6 +42,8 @@
   var repeatMap = {};
   var observer = null;
   var scanInterval = null;
+  var notificationInterval = null;
+  var autoScanInterval = null;
   var notifCallback = null;
 
   // ── LocalStorage ───────────────────────────────────────────
@@ -267,6 +269,14 @@
             }
           }
           if (!deleteOpt) {
+            // Fallback: zkus tlačítka s testid/data-icon
+            var fallback = document.querySelector('[data-testid*="delete"], [data-icon="trash"], [aria-label*="smazat"], [aria-label*="delete"]');
+            if (fallback) {
+              deleteOpt = fallback;
+            }
+          }
+
+          if (!deleteOpt) {
             document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
             log('⚠️ Volba "Smazat" nenalezena', 'warn');
             resolve(false);
@@ -292,6 +302,13 @@
           }
           confirmBtn.click();
           await sleep(300);
+
+          if (document.contains(el)) {
+            log('⚠️ Zpráva možná nebyla smazána, zkouším znovu', 'warn');
+            resolve(false);
+            return;
+          }
+
           resolve(true);
         } catch (e) {
           log('❌ Chyba mazání: ' + e.message, 'warn');
@@ -326,12 +343,16 @@
   }
 
   // ── Skenování ──────────────────────────────────────────────
-  function scanChat() {
+  function scanChat(showNotificationUI) {
+    if (typeof showNotificationUI === 'undefined') showNotificationUI = true;
+
     var current = getCurrentGroupName();
     if (config.global.selectedGroup && config.global.selectedGroup !== current) {
       clearFlags();
-      updateNotification();
-      log('⏸️ Sken přeskočen pro "' + current + '" (vybrána "' + config.global.selectedGroup + '")', 'info');
+      if (showNotificationUI) {
+        updateNotification();
+        log('⏸️ Sken přeskočen pro "' + current + '" (vybrána "' + config.global.selectedGroup + '")', 'info');
+      }
       return;
     }
 
@@ -355,8 +376,15 @@
       if (checkTimed(el)) { flagMessage(el, 'starší než ' + config.global.timedDeleteMinutes + ' min', 'timed'); count++; }
     }
 
-    updateNotification();
-    log('🔍 Sken: ' + count + ' nalezeno z ' + msgs.length + ' zpráv', count > 0 ? 'warn' : 'info');
+    if (showNotificationUI) {
+      updateNotification();
+      log('🔍 Sken: ' + count + ' nalezeno z ' + msgs.length + ' zpráv', count > 0 ? 'warn' : 'info');
+    } else {
+      if (flaggedMessages.length > 0) {
+        var btn = document.getElementById('wsf-toggle-btn');
+        if (btn) btn.classList.add('wsf-pulse');
+      }
+    }
   }
 
   function startObserver() {
@@ -402,11 +430,20 @@
 
   function startPeriodicScan() {
     if (scanInterval) clearInterval(scanInterval);
+    if (autoScanInterval) clearInterval(autoScanInterval);
+    if (notificationInterval) clearInterval(notificationInterval);
+
+    autoScanInterval = setInterval(function () {
+      if (config.global.enabled) scanChat(false);
+    }, 5000);
+
     var mins = config.global.scanIntervalMinutes || 60;
-    scanInterval = setInterval(function () {
-      if (config.global.enabled) scanChat();
+    notificationInterval = setInterval(function () {
+      if (config.global.enabled) scanChat(true);
     }, mins * 60 * 1000);
-    log('⏱️ Periodický sken: každých ' + mins + ' min', 'info');
+
+    scanInterval = autoScanInterval;
+    log('⏱️ Skenování každých 5 s, upozornění každých ' + mins + ' min', 'info');
   }
 
   function watchChatSwitch() {
@@ -746,12 +783,7 @@
             '<span id="wsf-group-filter-label" style="font-size:12px; color:#aaa; width:100%">Aktivní skupina: všechny</span>' +
             '<select id="wsf-group-select" class="wsf-input" style="width:100%;"></select>' +
             '<button class="wsf-btn wsf-btn-green" id="wsf-group-add-current" style="width:100%">+ Přidat aktuální skupinu</button>' +
-<<<<<<< HEAD
-||||||| parent of 75ce4eb (feat: group selection toggle in UI; active group filter behavior)
-          '<div class="wsf-section-title">Změnit název</div>' +
-=======
             '<div id="wsf-group-list" class="wsf-tags" style="margin-top:8px; max-height:120px; overflow-y:auto; width:100%"></div>' +
->>>>>>> 75ce4eb (feat: group selection toggle in UI; active group filter behavior)
           '</div>' +
           '<div class="wsf-section-title" style="margin-top:10px">Změnit název</div>' +
           '<div class="wsf-input-row"><input type="text" class="wsf-input" id="wsf-grp-name" placeholder="Nový název…"><button class="wsf-btn wsf-btn-green" id="wsf-grp-name-btn">📋 Kopírovat</button></div>' +
@@ -860,6 +892,9 @@
       el.addEventListener('change', function () {
         config.global[key] = parseInt(el.value, 10) || 0;
         saveConfig();
+        if (id === 'wsf-scan-interval' && config.global.enabled) {
+          startPeriodicScan();
+        }
       });
     }
     bindNumber('wsf-max-repeat', 'maxRepeat');
