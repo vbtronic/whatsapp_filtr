@@ -30,9 +30,23 @@ Vlastní nástroj pro moderaci WhatsApp Web skupin. Bookmarklet pro Safari/Chrom
 
 ### Kroky
 1. `git clone https://github.com/vbtronic/whatsapp_filtr.git && cd whatsapp_filtr`
-2. `./serve.sh` (nech běžet)
-3. **Safari:** Nastavení → Pokročilé → Zobrazit nabídku Vývoj. Přidej záložku, do Adresy vlož obsah `bookmarklet.js`.
-4. Otevři web.whatsapp.com → klikni záložku → zelené 🛡️ vpravo dole
+2. `./serve.sh` (nech běžet v Terminálu)
+
+### Varianta A: Safari (bookmarklet)
+1. Safari → Nastavení → Pokročilé → ✅ **„Zobrazit nabídku Vývoj"**
+2. Přidej libovolnou záložku (⌘D)
+3. Záložky → Upravit záložky → přejmenuj na **🛡️ Spam Filtr**
+4. Do pole **Adresa** vlož celý obsah souboru `bookmarklet.js`
+5. Otevři web.whatsapp.com → klikni záložku → zelené 🛡️ vpravo dole
+
+### Varianta B: Chrome (rozšíření)
+1. Otevři `chrome://extensions/`
+2. Zapni **Režim pro vývojáře** (přepínač vpravo nahoře)
+3. Klikni **Načíst rozbalené rozšíření**
+4. Vyber složku `whatsapp_filtr/`
+5. Otevři web.whatsapp.com → rozšíření se načte automaticky
+
+> **Chrome výhoda:** Nemusíš klikat bookmarklet po každém reloadu — rozšíření se injektuje automaticky.
 
 ### AI Setup (volitelné)
 ```bash
