@@ -262,6 +262,11 @@ textarea.wsf-input {
   border-radius: 4px;
   font-size: 12px;
 }
+.wsf-tag-active {
+  border: 1px solid #25d366;
+  background: #25d366;
+  color: #111827;
+}
 .wsf-tag-remove {
   cursor: pointer;
   color: #ef4444;
@@ -445,6 +450,7 @@ select.wsf-input {
       deleteBatchDelay: 3500,
       notifyVia: 'ui',       // 'ui' | 'email' | 'both'
       notifyEmail: '',
+      selectedGroup: ''
     }
   };
 
@@ -735,6 +741,14 @@ select.wsf-input {
 
   // ── Skenování ──────────────────────────────────────────────
   function scanChat() {
+    var current = getCurrentGroupName();
+    if (config.global.selectedGroup && config.global.selectedGroup !== current) {
+      clearFlags();
+      updateNotification();
+      log('⏸️ Sken přeskočen pro "' + current + '" (vybrána "' + config.global.selectedGroup + '")', 'info');
+      return;
+    }
+
     clearFlags();
     repeatMap = {};
     var msgs = getMessages();
@@ -769,6 +783,8 @@ select.wsf-input {
 
     observer = new MutationObserver(function (mutations) {
       if (!config.global.enabled) return;
+      var current = getCurrentGroupName();
+      if (config.global.selectedGroup && config.global.selectedGroup !== current) return;
       for (var m = 0; m < mutations.length; m++) {
         var added = mutations[m].addedNodes;
         for (var n = 0; n < added.length; n++) {
@@ -960,6 +976,64 @@ select.wsf-input {
     var gn = document.getElementById('wsf-current-group');
     if (el) el.textContent = name;
     if (gn) gn.textContent = name;
+    updateGroupSelect();
+  }
+
+  function updateGroupSelect() {
+    var select = document.getElementById('wsf-group-select');
+    if (!select) return;
+
+    var current = getCurrentGroupName() || '–';
+    var keys = Object.keys(config.groups || {}).sort();
+
+    select.innerHTML = '';
+    var allOpt = document.createElement('option');
+    allOpt.value = '';
+    allOpt.textContent = 'Všechny skupiny';
+    select.appendChild(allOpt);
+
+    keys.forEach(function (key) {
+      var o = document.createElement('option');
+      o.value = key;
+      o.textContent = key;
+      select.appendChild(o);
+    });
+
+    select.value = config.global.selectedGroup || '';
+
+    var label = document.getElementById('wsf-group-filter-label');
+    if (label) {
+      label.textContent = 'Aktuální chat: ' + current + ' | Aktivní skupina: ' + (config.global.selectedGroup || 'všechny');
+    }
+
+    renderGroupList();
+  }
+
+  function renderGroupList() {
+    var container = document.getElementById('wsf-group-list');
+    if (!container) return;
+
+    var keys = Object.keys(config.groups || {}).sort();
+    if (keys.length === 0) {
+      container.innerHTML = '<small style="color:#9ca3af">Žádné skupiny v seznamu. Přidej aktuální skupinu.</small>';
+      return;
+    }
+
+    container.innerHTML = keys.map(function (key) {
+      var activeClass = (config.global.selectedGroup === key) ? 'wsf-tag-active' : '';
+      return '<span class="wsf-tag ' + activeClass + '" data-group="' + escapeHtml(key) + '">' + escapeHtml(key) + '</span>';
+    }).join('');
+
+    container.querySelectorAll('.wsf-tag').forEach(function (item) {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', function () {
+        var group = item.dataset.group;
+        config.global.selectedGroup = group;
+        saveConfig();
+        updateGroupNameUI();
+        log('✅ Skupina aktivní k moderaci: ' + group, 'info');
+      });
+    });
   }
 
   function updateStatsUI() {
@@ -1078,6 +1152,13 @@ select.wsf-input {
         '<div class="wsf-section">' +
           '<div class="wsf-section-title">Aktuální skupina</div>' +
           '<p style="margin:0 0 12px">Skupina: <strong id="wsf-current-group">–</strong></p>' +
+          '<div class="wsf-section-title">Zvolit skupinu k moderaci</div>' +
+          '<div class="wsf-input-row" style="gap:8px;flex-wrap:wrap">' +
+            '<span id="wsf-group-filter-label" style="font-size:12px;color:#aaa;width:100%">Aktivní skupina: všechny</span>' +
+            '<select id="wsf-group-select" class="wsf-input" style="width:100%;"></select>' +
+            '<button class="wsf-btn wsf-btn-green" id="wsf-group-add-current" style="width:100%">+ Přidat aktuální skupinu</button>' +
+            '<div id="wsf-group-list" class="wsf-tags" style="margin-top:8px;max-height:120px;overflow-y:auto;width:100%"></div>' +
+          '</div>' +
           '<div class="wsf-section-title">Změnit název</div>' +
           '<div class="wsf-input-row"><input type="text" class="wsf-input" id="wsf-grp-name" placeholder="Nový název…"><button class="wsf-btn wsf-btn-green" id="wsf-grp-name-btn">📋 Kopírovat</button></div>' +
           '<div class="wsf-section-title" style="margin-top:12px">Popis skupiny</div>' +
@@ -1282,6 +1363,27 @@ select.wsf-input {
       var desc = document.getElementById('wsf-grp-desc').value.trim();
       if (!desc) return;
       changeGroupDescription(desc);
+    });
+
+    var groupSelect = document.getElementById('wsf-group-select');
+    if (groupSelect) {
+      groupSelect.addEventListener('change', function () {
+        config.global.selectedGroup = groupSelect.value;
+        saveConfig();
+        updateGroupSelect();
+        log('✅ Vybraná skupina pro moderaci: ' + (groupSelect.value || 'všechny'), 'info');
+      });
+    }
+
+    document.getElementById('wsf-group-add-current').addEventListener('click', function () {
+      var cg = getCurrentGroupName();
+      if (!cg) { log('⚠️ Není otevřena žádná skupina', 'warn'); return; }
+      if (!config.groups) config.groups = {};
+      config.groups[cg] = true;
+      config.global.selectedGroup = cg;
+      saveConfig();
+      updateGroupSelect();
+      log('➕ Přidána skupina k výběru: ' + cg, 'ok');
     });
 
     // AI
