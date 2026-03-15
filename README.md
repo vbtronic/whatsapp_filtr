@@ -12,7 +12,8 @@ Vlastní nástroj pro moderaci WhatsApp Web skupin. Bookmarklet pro Safari/Chrom
 - 🤖 **AI asistent** — lokální Ollama AI, odpovědi se **zkopírují do schránky** (vy vložíte ručně)
 - 🎛️ **Skupina** — název/popis se **zkopíruje do schránky** (vy změníte ručně)
 - 📊 **Dashboard** — počítadla (jen čísla, žádná osobní data), log aktivit
-- 📧 **Notifikace** — upozornění v UI panelu nebo e-mailem (mailto:)
+- � **Výběr skupiny** — lze vybrat konkrétní skupinu pro moderaci z uloženého seznamu.
+- �📧 **Notifikace** — upozornění v UI panelu nebo e-mailem (mailto:)
 
 ## ❌ Co nástroj NEDĚLÁ
 
@@ -96,6 +97,12 @@ docs/index.html — landing page (GitHub Pages)
 LICENSE.md      — licence (nekomerční)
 AGENTS.md       — instrukce pro AI agenty
 ```
+
+## 👥 Výběr skupiny k moderaci
+- Otevři panel **Skupina** v UI.
+- Klikni **+ Přidat aktuální skupinu** aby se uložila do seznamu.
+- Zvol skupinu v dropdownu pro režim *pouze vybrané skupiny*.
+- Pokud je vybrána konkrétní skupina, skript ignoruje ostatní chody.
 
 ## ⚠️ Právní kontext
 
