@@ -33,7 +33,10 @@ Vlastní nástroj pro moderaci WhatsApp Web skupin. Bookmarklet pro Safari/Chrom
 2. `./serve.sh` (nech běžet v Terminálu)
 
 ### Varianta A: Safari (bookmarklet)
-1. Safari → Nastavení → Pokročilé → ✅ **„Zobrazit nabídku Vývoj"**
+1. **Zapni vývojářské funkce:**
+   - Safari → Nastavení (⌘,) → **Pokročilé**
+   - Zaškrtni **„Zobrazit funkce pro vývojáře webu"** (v starších verzích: „Zobrazit nabídku Vývoj")
+   - Pokud po aktualizaci macOS nastavení nefunguje: odškrtni, zavři Safari, otevři znovu, zaškrtni zpět
 2. Přidej libovolnou záložku (⌘D)
 3. Záložky → Upravit záložky → přejmenuj na **🛡️ Spam Filtr**
 4. Do pole **Adresa** vlož celý obsah souboru `bookmarklet.js`
