@@ -32,15 +32,19 @@ Vlastní nástroj pro moderaci WhatsApp Web skupin. Bookmarklet pro Safari/Chrom
 1. `git clone https://github.com/vbtronic/whatsapp_filtr.git && cd whatsapp_filtr`
 2. `./serve.sh` (nech běžet v Terminálu)
 
-### Varianta A: Safari (bookmarklet)
+### Varianta A: Safari (konzole) — doporučeno
+WhatsApp Web blokuje externí skripty (CSP), proto se skript vkládá přes konzoli:
 1. **Zapni vývojářské funkce:**
-   - Safari → Nastavení (⌘,) → **Pokročilé**
-   - Zaškrtni **„Zobrazit funkce pro vývojáře webu"** (v starších verzích: „Zobrazit nabídku Vývoj")
-   - Pokud po aktualizaci macOS nastavení nefunguje: odškrtni, zavři Safari, otevři znovu, zaškrtni zpět
-2. Přidej libovolnou záložku (⌘D)
-3. Záložky → Upravit záložky → přejmenuj na **🛡️ Spam Filtr**
-4. Do pole **Adresa** vlož celý obsah souboru `bookmarklet.js`
-5. Otevři web.whatsapp.com → klikni záložku → zelené 🛡️ vpravo dole
+   - Safari → Settings (⌘,) → **Advanced**
+   - Zaškrtni **„Show features for web developers"**
+   - Pokud po aktualizaci macOS nefunguje: odškrtni, zavři Safari (⌘Q), otevři znovu, zaškrtni zpět
+2. Otevři **web.whatsapp.com** a přihlas se
+3. **Develop** → **Show JavaScript Console** (⌥⌘C)
+4. Otevři soubor `console-paste.js`, zkopíruj celý obsah (⌘A, ⌘C)
+5. Vlož do konzole (⌘V) a stiskni **Enter**
+6. Vpravo dole se objeví zelené 🛡️ — klikni → panel se otevře
+
+> **Pozn.:** Po reloadu stránky je nutné kód vložit znovu.
 
 ### Varianta B: Chrome (rozšíření)
 1. Otevři `chrome://extensions/`
@@ -50,6 +54,20 @@ Vlastní nástroj pro moderaci WhatsApp Web skupin. Bookmarklet pro Safari/Chrom
 5. Otevři web.whatsapp.com → rozšíření se načte automaticky
 
 > **Chrome výhoda:** Nemusíš klikat bookmarklet po každém reloadu — rozšíření se injektuje automaticky.
+
+## 💻 MacOS Quick Guide (English)
+This section is in English for latest macOS users; the surrounding comments are written in Czech.
+
+- Ensure you run `./serve.sh` in project root first (Python 3 local server).
+- If you use the bookmarklet from HTTPS WhatsApp Web, the browser may block mixed-content HTTP loads.
+- Either use Chrome extension mode (recommended), or set up local HTTPS access for localhost if you choose bookmarklet.
+- To run on newest macOS:
+  1. `cd whatsapp_filtr && ./serve.sh`
+  2. in Safari: enable Develop menu, add a bookmark, set its URL to `bookmarklet.js` code.
+  3. in Chrome: use `chrome://extensions/` + load unpacked folder `whatsapp_filtr/`.
+  4. open `https://web.whatsapp.com`, activate extension/bookmarklet, and use panel controls.
+
+> NOTE: If WhatsApp blocks script load as "insecure", switch to the extension version or run on `http://localhost:8000` via a non-HTTPS context.
 
 ### AI Setup (volitelné)
 ```bash
@@ -104,3 +122,5 @@ AGENTS.md       — instrukce pro AI agenty
 
 ## 👤 Autor
 **Viktor Brunclík** — [vbtronic](https://github.com/vbtronic)
+
+> ✅ Tento projekt byl vytvořen ve spolupráci s GitHub Copilot (AI asistent) a s Amp (Sourcegraph).
